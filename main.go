@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"christine.website/go/krewella/irc"
+	"christine.website/go/krewella/security"
 	"github.com/codegangsta/negroni"
 	"github.com/drone/routes"
 )
@@ -18,8 +19,10 @@ import (
 var (
 	router *routes.RouteMux
 	n      *negroni.Negroni
+	auth   *security.Auth
 
-	bots map[string]*irc.Bot // network -> bot pair
+	bots   map[string]*irc.Bot // network -> bot pair
+	apikey string
 )
 
 func createBots() error {
@@ -96,6 +99,7 @@ func main() {
 	router.Post("/message/:network/:channel", sendMessageToChannel)
 
 	n = negroni.Classic()
+	n.Use(security.NewAuth(os.Getenv("KREWELLA_KEY")))
 
 	n.UseHandler(router)
 
