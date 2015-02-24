@@ -70,3 +70,23 @@ func New(network string) (b *Bot, err error) {
 
 	return
 }
+
+// Join makes a bot join a channel.
+//
+// If the bot is already in said channel, it will return false. If it had to
+// join the channel, it will return true.
+//
+// TODO: handle being banned
+func (b *Bot) Join(channel string) bool {
+	for _, mychan := range b.channels {
+		if strings.ToLower(channel) == strings.ToLower(mychan) {
+			return false
+		}
+	}
+
+	b.IrcObj.Join(channel)
+
+	b.channels = append(b.channels, channel)
+
+	return true
+}

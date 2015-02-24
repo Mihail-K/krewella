@@ -31,6 +31,37 @@ func TestMakeBot(t *testing.T) {
 	}
 
 	time.Sleep(500 * time.Millisecond)
+	bot.IrcObj.Quit()
+}
 
+func TestJoinActuallyHasToJoin(t *testing.T) {
+	bot, err := New("PonyChat")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bot.Join("#foo") {
+		t.Fatal("Couldn't join #foo")
+	}
+
+	time.Sleep(500 * time.Millisecond)
+	bot.IrcObj.Quit()
+}
+
+func TestJoinDoesntDoubleJoin(t *testing.T) {
+	bot, err := New("PonyChat")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bot.Join("#foo")
+
+	if bot.Join("#foo") {
+		t.Fatal("needed to join #foo again? wtf.")
+	}
+
+	time.Sleep(500 * time.Millisecond)
 	bot.IrcObj.Quit()
 }
