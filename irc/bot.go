@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/thoj/go-ircevent"
 )
@@ -89,4 +90,13 @@ func (b *Bot) Join(channel string) bool {
 	b.channels = append(b.channels, channel)
 
 	return true
+}
+
+// Talk speaks to a channel with a given message.
+func (b *Bot) Talk(channel, message string) {
+	if b.Join(channel) {
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	b.IrcObj.Privmsg(channel, message)
 }
