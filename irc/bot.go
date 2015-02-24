@@ -69,6 +69,8 @@ func New(network string) (b *Bot, err error) {
 		return nil, err
 	}
 
+	go b.IrcObj.Loop()
+
 	return
 }
 
