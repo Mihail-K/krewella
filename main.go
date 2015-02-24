@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -18,7 +19,7 @@ var (
 	router *routes.RouteMux
 	n      *negroni.Negroni
 
-	bots map[string]*irc.Bot
+	bots map[string]*irc.Bot // network -> bot pair
 )
 
 func createBots() error {
@@ -45,6 +46,40 @@ func destroyBots() {
 	}
 }
 
+func sendMessageToChannel(w http.ResponseWriter, req *http.Request) {
+	params := req.URL.Query()
+
+	network := params.Get(":network")
+	channel := params.Get(":channel")
+
+	channel = "#" + channel
+
+	var bot *irc.Bot
+	bot, ok := bots[strings.ToLower(network)]
+	if !ok {
+		return
+	}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+		fmt.Fprintf(w, "Could not decode message")
+		return
+	}
+
+	if string(body) == "" {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+		fmt.Fprintf(w, "Could not decode message")
+		return
+	}
+
+	bot.Talk(channel, string(body))
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Your message \"%s\" was sent to %s on %s!",
+		string(body), channel, network)
+}
+
 func main() {
 	err := createBots()
 	if err != nil {
@@ -57,6 +92,8 @@ func main() {
 	router.Get("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprint(w, "pancakes")
 	})
+
+	router.Post("/message/:network/:channel", sendMessageToChannel)
 
 	n = negroni.Classic()
 
